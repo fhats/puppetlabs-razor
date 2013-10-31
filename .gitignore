@@ -1,3 +1,5 @@
 /pkg
 /CHANGELOG
 /CONTRIBUTORS
+Gemfile.lock
+spec/fixtures/

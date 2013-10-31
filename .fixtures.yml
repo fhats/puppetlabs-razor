@@ -1,0 +1,9 @@
+fixtures:
+  symlinks:
+    "razor": "#{source_dir}"
+  repositories:
+    "java": "git://github.com/puppetlabs/puppetlabs-java"
+    "tftp": "git://github.com/puppetlabs/puppetlabs-tftp"
+    "stdlib": "git://github.com/puppetlabs/puppetlabs-stdlib"
+    "xinetd": "git://github.com/puppetlabs/puppetlabs-xinetd.git"
+
