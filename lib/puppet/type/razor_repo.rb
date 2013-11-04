@@ -1,14 +1,14 @@
 Puppet::Type.newtype(:razor_repo) do
+  ensurable
 
-  newproperty(:name, :namevar => true) do
+  newparam(:name, :namevar => true) do
     desc "The name of the repository; used internally by Razor to identify the repo"
-    ensurable
   end
 
   newproperty(:url) do
     desc "Where the installation materials for this repo can be found"
     validate do |value|
-      unless Pathname.new(value).absolute? || URI.parse(value).is_a(URI::Generic)
+      unless Pathname.new(value).absolute? || URI.parse(value).is_a?(URI::Generic)
         fail("Invalid URL #{value}")
       end
     end

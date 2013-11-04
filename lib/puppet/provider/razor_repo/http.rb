@@ -1,48 +1,47 @@
-require "rubygems"
-require "json"
-require "net/http"
-
-Puppet::Type.type(:razor_repo).provide(:http) do
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
+Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
   def exists?
-    path = "/api/collections/repos/#{resource[:name]}"
-    http = Net::HTTP.new("localhost", 8080)
-    response = http.request_get(path)
-    response.code == 200
+    self.class.collection_has?("repos", resource[:name])
+  end
+
+  def self.instances
+    repos = self.collection_list("repos")
+    repos.collect do |repo|
+      repo_name = repo["name"]
+      repo_details = self.collection_get("repos", repo_name)
+      url = repo_details["iso_url"] || repo_details["url"]
+      iso = url == repo_details["iso_url"]
+      new( :name => repo_name,
+           :url  => url,
+           :iso  => iso
+      )
+    end
   end
 
   def create
     path = "/api/commands/create-repo"
-    http = Net::HTTP.new("localhost", 8080)
     data = {
-      :name    => resource[:name],
-      :iso_url => (resource[:url] if resource[:iso]),
-      :url     => (resource[:url] unless resource[:iso])
+      :name     => resource[:name],
+      "iso-url" => (resource[:url] if resource[:iso]),
+      :url      => (resource[:url] unless resource[:iso])
     }.reject{ |k,v| v.nil? }
-    response = http.request_post(path, data.to_json)
-
-    fail("Could not contact the razor server") unless response.code == 202
+    status_code, body = self.class.http_post(path, data)
+    fail("Error creating #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
   end
 
   def destroy
     path = "/api/commands/delete-repo"
-    http = Net::HTTP.new("localhost", 8080)
     data = {
       :name    => resource[:name],
     }
-    response = http.request_post(path, data.to_json)
-    fail("Could not contact the razor server") unless response.code == 202
+    status_code, body = self.class.http_post(path, data)
+    fail("Error destroying #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
   end
 
   def url
-    path = "/api/collections/repos/#{resource[:name]}"
-    http = Net::HTTP.new("localhost", 8080)
-    response = http.request_get(path)
-
-    fail("Could not contact the razor server") unless response.code == 200
-
-    response_body = JSON.parse(response.body)
-    resource[:iso] ? response_body["iso_url"] : response_body["url"]
+    body = self.class.collection_get("repos", resource[:name])
+    resource[:iso] ? body["iso_url"] : body["url"]
   end
 
   def url=(value)
