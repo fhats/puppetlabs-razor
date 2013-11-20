@@ -1,52 +1,34 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
 Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
-  def exists?
-    self.class.collection_has?("repos", resource[:name])
-  end
+  @@properties = ["url"]
+  @@type = "repo"
 
-  def self.instances
-    repos = self.collection_list("repos")
-    repos.collect do |repo|
-      repo_name = repo["name"]
-      repo_details = self.collection_get("repos", repo_name)
-      url = repo_details["iso_url"] || repo_details["url"]
-      iso = url == repo_details["iso_url"]
-      new( :name => repo_name,
-           :url  => url,
-           :iso  => iso
-      )
-    end
-  end
+  def self.format_hash_params(instance_details)
+    name = instance_details["name"]
+    url = instance_details["iso_url"] || instance_details["url"]
+    iso = url == instance_details["iso_url"]
 
-  def create
-    path = "/api/commands/create-repo"
-    data = {
-      :name     => resource[:name],
-      "iso-url" => (resource[:url] if resource[:iso]),
-      :url      => (resource[:url] unless resource[:iso])
-    }.reject{ |k,v| v.nil? }
-    status_code, body = self.class.http_post(path, data)
-    fail("Error creating #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
-  end
-
-  def destroy
-    path = "/api/commands/delete-repo"
-    data = {
-      :name    => resource[:name],
+    {
+      :name => name,
+      :url => url,
+      :iso => iso
     }
-    status_code, body = self.class.http_post(path, data)
-    fail("Error destroying #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
   end
 
+  def format_create_params
+    url_key = resource[:iso] ? "iso-url" : "url"
+    {
+      :name         => resource[:name],
+      :"#{url_key}" => resource[:url]
+    }
+  end
+
+  # We have to override the default URL getter because of the fact that URL
+  # can come in as either 'url' or 'iso-url'
   def url
-    body = self.class.collection_get("repos", resource[:name])
-    resource[:iso] ? body["iso_url"] : body["url"]
-  end
-
-  def url=(value)
-    self.destroy()
-    self.create()
+    repo = self.class.collection_get("repos", resource[:name])
+    repo["url"] || repo["iso_url"]
   end
 
 end
