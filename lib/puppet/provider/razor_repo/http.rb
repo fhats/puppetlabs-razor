@@ -17,7 +17,7 @@ Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet::Provider::Razor
   end
 
   def format_create_params
-    url_key = resource[:iso] ? "iso-url" : "url"
+    url_key = resource[:iso] == :true ? "iso-url" : "url"
     {
       :name         => resource[:name],
       :"#{url_key}" => resource[:url]
