@@ -5,6 +5,11 @@ Puppet::Type.newtype(:razor_installer) do
     desc "The name of the installer; used internally by Razor to identify the installer"
   end
 
+  newproperty(:base) do
+    desc "An installer which this one is derived from, if any"
+    defaultto "nothing"
+  end
+
   newproperty(:os) do
     desc "The name of the OS"
     validate do |value|

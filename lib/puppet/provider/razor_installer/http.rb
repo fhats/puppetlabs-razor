@@ -1,7 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
 Puppet::Type.type(:razor_installer).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
-  @@properties = ["os", "os_version", "description", "boot_seq", "templates"]
+  @@properties = ["base", "os", "os_version", "description", "boot_seq", "templates"]
   @@type = "installer"
 
   def os
