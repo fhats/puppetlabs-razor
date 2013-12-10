@@ -1,8 +1,13 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
 Puppet::Type.type(:razor_policy).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
-  @@properties = ["repo", "installer", "broker", "hostname_pattern", "root_password", "max_count", "rule_number", "tags"]
-  @@type = "policy"
+  def self.properties
+    ["repo", "installer", "broker", "hostname_pattern", "root_password", "max_count", "rule_number", "tags"]
+  end
+
+  def self.razor_type
+    "policy"
+  end
 
   def self.type_plural
     "policies"

@@ -1,8 +1,13 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
 Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
-  @@properties = ["url"]
-  @@type = "repo"
+  def self.properties
+    ["url"]
+  end
+
+  def self.razor_type
+    "repo"
+  end
 
   def self.format_hash_params(instance_details)
     name = instance_details["name"]

@@ -6,7 +6,7 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
   @@client = Net::HTTP.new("localhost", 8080)
 
   def self.type_plural
-    "#{@@type}s"
+    "#{self.razor_type}s"
   end
 
   def initialize(*d, &b)
@@ -37,13 +37,13 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
   end
 
   def find_missing_getters
-    @@properties.select { |property|
+    self.class.properties().select { |property|
       !self.respond_to? property
     }
   end
 
   def find_missing_setters
-    @@properties.select { |property|
+    self.class.properties().select { |property|
       !self.respond_to? "#{property}="
     }
   end
@@ -67,10 +67,10 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
   end
 
   def create
-    path = "/api/commands/create-#{@@type}"
+    path = "/api/commands/create-#{self.class.razor_type}"
     data = self.format_create_params
     status_code, body = self.class.http_post(path, data)
-    fail("Error creating #{@@type} #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
+    fail("Error creating #{self.class.razor_type} #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
   end
 
   def format_create_params
@@ -81,7 +81,7 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
     params = {
       :name => resource[:name]
     }
-    @@properties.each { |prop|
+    self.class.properties().each { |prop|
       index = prop.to_sym
       params[index] = resource[index]
     }
@@ -89,12 +89,12 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
   end
 
   def destroy
-    path = "/api/commands/delete-#{@@type}"
+    path = "/api/commands/delete-#{self.class.razor_type}"
     data = {
       :name    => resource[:name],
     }
     status_code, body = self.class.http_post(path, data)
-    fail("Error destroying #{@@type} #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
+    fail("Error destroying #{self.class.razor_type} #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
   end
 
   def self.http_get(path, as_json=true)
@@ -139,7 +139,7 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
   end
 
   def self.post_failure(status_code, body, ident=nil)
-    activity = ident ? "retrieving #{@@type} #{ident}" : "contacting razor server"
+    activity = ident ? "retrieving #{self.class.razor_type} #{ident}" : "contacting razor server"
     fail("Unexpected response #{activity}: #{status_code} #{body}")
   end
 
