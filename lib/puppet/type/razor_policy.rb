@@ -16,6 +16,12 @@ Puppet::Type.newtype(:razor_policy) do
     end
   end
 
+  newproperty(:enabled) do
+    desc "Whether or not the policy is enabled."
+    defaultto true
+    newvalues(true, false)
+  end
+
   newproperty(:installer) do
     desc "The name of the installer this policy should use."
 
