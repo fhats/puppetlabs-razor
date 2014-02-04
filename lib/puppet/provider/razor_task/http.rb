@@ -1,12 +1,12 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
-Puppet::Type.type(:razor_installer).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
+Puppet::Type.type(:razor_task).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
 
   def self.properties
     ["os", "os_version", "description", "boot_seq", "templates"]
   end
 
   def self.razor_type
-    "installer"
+    "task"
   end
 
   def os
@@ -21,8 +21,8 @@ Puppet::Type.type(:razor_installer).provide(:http, :parent => Puppet::Provider::
 
   def templates
     # TODO(fhats)
-    # We have to force a no-op here since razor doesn't return the installer
-    # text when asked for the details of an installer, making it hard for Puppet
+    # We have to force a no-op here since razor doesn't return the task
+    # text when asked for the details of an task, making it hard for Puppet
     # to ensure equality.
     resource[:templates]
   end

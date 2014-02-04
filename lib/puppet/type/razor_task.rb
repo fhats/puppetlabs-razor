@@ -1,8 +1,8 @@
-Puppet::Type.newtype(:razor_installer) do
+Puppet::Type.newtype(:razor_task) do
   ensurable
 
   newparam(:name, :namevar => true) do
-    desc "The name of the installer; used internally by Razor to identify the installer"
+    desc "The name of the task; used internally by Razor to identify the task"
   end
 
   newproperty(:os) do
@@ -20,7 +20,7 @@ Puppet::Type.newtype(:razor_installer) do
   end
 
   newproperty(:description) do
-    desc "A human-readable description of this installer"
+    desc "A human-readable description of this task"
     validate do |value|
       fail("description must be a string") unless value.is_a?(String)
     end
