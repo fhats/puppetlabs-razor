@@ -1,5 +1,5 @@
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'http'))
-Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet::Provider::RazorHttpClient) do
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'razor', 'httpclient_providerbase'))
+Puppet::Type.type(:razor_repo).provide(:http, :parent => Puppet_X::Razor::HttpClient_ProviderBase) do
 
   def self.properties
     ["url"]

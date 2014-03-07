@@ -2,7 +2,7 @@ require "rubygems"
 require "json"
 require "net/http"
 
-class Puppet::Provider::RazorHttpClient < Puppet::Provider
+class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
   @@client = Net::HTTP.new("localhost", 8080)
 
   def self.type_plural
