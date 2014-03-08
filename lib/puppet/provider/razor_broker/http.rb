@@ -1,13 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'razor', 'httpclient_providerbase'))
 Puppet::Type.type(:razor_broker).provide(:http, :parent => Puppet_X::Razor::HttpClient_ProviderBase) do
 
-  def self.properties
-    ["configuration", "type"]
-  end
-
-  def self.razor_type
-    "broker"
-  end
+  razor_type :broker
 
   def self.format_hash_params(instance_details)
     name = instance_details["name"]
@@ -29,8 +23,10 @@ Puppet::Type.type(:razor_broker).provide(:http, :parent => Puppet_X::Razor::Http
   end
 
   def type
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["broker-type"]
+    collection_get()['broker-type']
   end
 
+  setup_property :configuration
+  setup_property :type
 end
+

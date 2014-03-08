@@ -5,47 +5,28 @@ require "net/http"
 class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
   @@client = Net::HTTP.new("localhost", 8080)
 
+  def self.setup_property(property)
+    if !self.respond_to? property
+      define_method property do
+        inst = collection_get()[property]
+      end
+    end
+    if !self.respond_to? "#{property}="
+      define_method "#{property}=" do
+        @property_hash[:needs_flush] = true
+      end
+    end
+  end
+
+  def flush
+    if @property_hash[:needs_flush]
+      self.destroy()
+      self.create()
+    end
+  end
+
   def self.type_plural
-    "#{self.razor_type}s"
-  end
-
-  def initialize(*d, &b)
-    super(*d, &b)
-    self.class.create_getters self.find_missing_getters
-    self.class.create_setters self.find_missing_setters
-  end
-
-  def self.create_getters(properties)
-    # Define default getters if they haven't already been defined
-    properties.each do |property|
-      define_method property do
-        inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-        inst[property]
-      end
-    end
-  end
-
-  def self.create_setters(properties)
-    properties.map { |property|
-      "#{property}="
-    }.each do |property|
-      define_method property do
-        self.destroy()
-        self.create()
-      end
-    end
-  end
-
-  def find_missing_getters
-    self.class.properties().select { |property|
-      !self.respond_to? property
-    }
-  end
-
-  def find_missing_setters
-    self.class.properties().select { |property|
-      !self.respond_to? "#{property}="
-    }
+    "#{@@razor_type}s"
   end
 
   def exists?
@@ -55,10 +36,8 @@ class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
   def self.instances
     insts = self.collection_list("#{self.class.type_plural}")
     insts.collect do |instance|
-      instance_name = instance["name"]
-      instance_details = self.collection_get("#{self.class.type_plural}", instance)
-      hash_params = self.format_hash_params(instance_details)
-      new(hash_params)
+      instance_details = collection_get(instance)
+      new(self.format_hash_params(instance_details))
     end
   end
 
@@ -66,8 +45,12 @@ class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
     instance_details
   end
 
+  def self.razor_type(type)
+    @@razor_type = type
+  end
+
   def create
-    path = "/api/commands/create-#{self.class.razor_type}"
+    path = "/api/commands/create-#{@@razor_type}"
     data = self.format_create_params
     status_code, body = self.class.http_post(path, data)
     fail("Error creating #{self.class.razor_type} #{resource[:name]}: #{status_code} #{body}") unless status_code == 202
@@ -130,11 +113,10 @@ class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
     body
   end
 
-  def self.collection_get(collection_type, identifier)
-    path = "/api/collections/#{collection_type}/#{identifier}"
-    status_code, body = self.http_get(path)
+  def collection_get(identifier = resource[:name])
+    status_code, body = self.http_get("/api/collections/#{self.class.type_plural}/#{identifier}")
 
-    self.post_failure(status_code, body, identifier) unless status_code == 200
+    self.post_failure(status_code, body, identifier) unless 200 == status_code
     body
   end
 
@@ -144,3 +126,4 @@ class Puppet_X::Razor::HttpClient_ProviderBase < Puppet::Provider
   end
 
 end
+

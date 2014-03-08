@@ -1,13 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'razor', 'httpclient_providerbase'))
 Puppet::Type.type(:razor_policy).provide(:http, :parent => Puppet_X::Razor::HttpClient_ProviderBase) do
 
-  def self.properties
-    ["enabled", "repo", "installer", "broker", "hostname_pattern", "root_password", "max_count", "rule_number", "tags"]
-  end
-
-  def self.razor_type
-    "policy"
-  end
+  razor_type :policy
 
   def self.type_plural
     "policies"
@@ -21,13 +15,11 @@ Puppet::Type.type(:razor_policy).provide(:http, :parent => Puppet_X::Razor::Http
   end
 
   def broker
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    { "name" => inst["broker"]["name"] }
+    { "name" => collection_get()["broker"]["name"] }
   end
 
   def enabled
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["enabled"]
+    collection_get()['enabled']
   end
 
   def enabled=(value)
@@ -39,22 +31,21 @@ Puppet::Type.type(:razor_policy).provide(:http, :parent => Puppet_X::Razor::Http
   end
 
   def hostname_pattern
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["configuration"]["hostname_pattern"]
+    collection_get()['configuration']['hostname_pattern']
   end
 
   def root_password
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["configuration"]["root_password"]
+    collection_get()['configuration']['root_password']
   end
 
   def installer
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    { "name" => inst["installer"]["name"] }
+    collection_get()['installer']['name']
   end
 
   def repo
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    { "name" => inst["repo"]["name"] }
+    collection_get()['repo']['name']
   end
+  [:enabled, :repo, :installer, :broker, :hostname_pattern, :root_password, :max_count, :rule_number, :tags].each { |p| setup_property p }
+
 end
+

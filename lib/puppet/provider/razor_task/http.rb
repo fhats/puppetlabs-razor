@@ -1,22 +1,13 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'razor', 'httpclient_providerbase'))
 Puppet::Type.type(:razor_task).provide(:http, :parent => Puppet_X::Razor::HttpClient_ProviderBase) do
-
-  def self.properties
-    ["os", "os_version", "description", "boot_seq", "templates"]
-  end
-
-  def self.razor_type
-    "task"
-  end
+  razor_type :task
 
   def os
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["os"]["name"]
+    collection_get()['os']['name']
   end
 
   def os_version
-    inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-    inst["os"]["version"]
+    collection_get()['os']['version']
   end
 
   def templates
@@ -27,4 +18,6 @@ Puppet::Type.type(:razor_task).provide(:http, :parent => Puppet_X::Razor::HttpCl
     resource[:templates]
   end
 
+  [:os, :os_version, :description, :boot_seq, :templates].each { |p| setup_property p }
 end
+
