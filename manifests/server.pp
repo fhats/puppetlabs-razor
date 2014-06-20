@@ -3,7 +3,7 @@ class razor::server {
   $dest = '/opt/razor'
 
   package { "razor-server":
-    ensure   => latest,
+    ensure   => hiera('razor::server::package_ensure', latest),
     require  => [Package[curl], Package[unzip]],
     notify   => Exec["deploy razor to torquebox"]
   }
