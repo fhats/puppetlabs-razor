@@ -1,13 +1,11 @@
-class razor::server {
+class razor::server(
+  $package_ensure = 'latest',
+) {
   $url  = 'http://links.puppetlabs.com/razor-server-latest.zip'
   $dest = '/opt/razor'
 
-  # Put the archive into place, if needed.
-  exec { "install razor binary distribution to ${dest}":
-    provider => shell,
-    command  => template('razor/install-zip.sh.erb'),
-    path     => '/bin:/usr/bin:/usr/local/bin:/opt/bin',
-    creates  => "${dest}/bin/razor-admin",
+  package { "razor-server":
+    ensure   => $package_ensure,
     require  => [Package[curl], Package[unzip]],
     notify   => Exec["deploy razor to torquebox"]
   }
@@ -18,7 +16,7 @@ class razor::server {
     # This is actually "notify if the file does not exist" :)
     command  => ":",
     notify   => Exec["deploy razor to torquebox"],
-    require  => Exec["install razor binary distribution to ${dest}"]
+    require  => Package['razor-server']
   }
 
   # deploy razor, if required.
@@ -31,14 +29,14 @@ class razor::server {
       "JRUBY_HOME=${razor::torquebox::dest}/jruby"
     ],
     path        => "${razor::torquebox::dest}/jruby/bin:/bin:/usr/bin:/usr/local/bin",
-    require     => Exec["install razor binary distribution to ${dest}"],
+    require     => Package['razor-server'],
     refreshonly => true
   }
 
   file { "${dest}/bin/razor-binary-wrapper":
     ensure  => file, owner => root, group => root, mode => 0755,
     content => template('razor/razor-binary-wrapper.erb'),
-    require => Exec["install razor binary distribution to ${dest}"]
+    require => Package['razor-server']
   }
 
   file { "/usr/local/bin/razor-admin":
@@ -48,12 +46,12 @@ class razor::server {
   # Work around what seems very much like a bug in the package...
   file { "${dest}/bin/razor-admin":
     mode    => 0755,
-    require => Exec["install razor binary distribution to ${dest}"]
+    require => Package['razor-server']
   }
 
   file { "/var/lib/razor":
     ensure => directory, owner => razor-server, group => razor-server, mode => 0775,
-    require => Exec["install razor binary distribution to ${dest}"]
+    require => Package['razor-server']
   }
 
   file { "/var/lib/razor/repo-store":
@@ -62,7 +60,7 @@ class razor::server {
 
   file { "${dest}/log":
     ensure  => directory, owner => razor-server, group => razor-server, mode => 0775,
-    require => Exec["install razor binary distribution to ${dest}"]
+    require => Package['razor-server']
   }
 
   file { "${dest}/log/production.log":
