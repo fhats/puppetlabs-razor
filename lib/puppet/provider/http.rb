@@ -20,18 +20,16 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
     properties.each do |property|
       define_method property do
         inst = self.class.collection_get("#{self.class.type_plural}", resource[:name])
-        inst[property]
+        inst[property].to_s
       end
     end
   end
 
   def self.create_setters(properties)
-    properties.map { |property|
-      "#{property}="
-    }.each do |property|
-      define_method property do
-        self.destroy()
-        self.create()
+    properties.each do |property|
+      define_method "#{property}=" do |value|
+        self.destroy
+        self.create
       end
     end
   end
@@ -107,7 +105,15 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
       "Content-Type" => "application/json"
     }
     response = @@client.request_post(path, data.to_json, headers)
-    return response.code.to_i, (as_json ? JSON.load(response.body) : response.body)
+    return_data = response.body
+    if as_json
+      begin
+        return_data = JSON.load(response.body)
+      rescue Exception => e
+        self.post_failure(path, response.code, "posted #{data.to_json} Could not parse JSON from: #{response.body}")
+      end
+    end
+    return response.code.to_i, return_data 
   end
 
   def self.collection_has?(collection_type, identifier)
@@ -118,7 +124,7 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
     elsif status_code == 404
       false
     else
-      self.post_failure(status_code, body)
+      self.post_failure(path, status_code, body)
     end
   end
 
@@ -126,7 +132,7 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
     path = "/api/collections/#{collection_type}"
     status_code, body = self.http_get(path)
 
-    self.post_failure(status_code, body) unless status_code == 200
+    self.post_failure(path, status_code, body) unless status_code == 200
     body
   end
 
@@ -134,13 +140,13 @@ class Puppet::Provider::RazorHttpClient < Puppet::Provider
     path = "/api/collections/#{collection_type}/#{identifier}"
     status_code, body = self.http_get(path)
 
-    self.post_failure(status_code, body, identifier) unless status_code == 200
+    self.post_failure(path, status_code, body, identifier) unless status_code == 200
     body
   end
 
-  def self.post_failure(status_code, body, ident=nil)
+  def self.post_failure(path, status_code, body, ident=nil)
     activity = ident ? "retrieving #{self.class.razor_type} #{ident}" : "contacting razor server"
-    fail("Unexpected response #{activity}: #{status_code} #{body}")
+    fail("Unexpected response #{activity}: from #{path} #{status_code} #{body}")
   end
 
 end
