@@ -1,9 +1,11 @@
-class razor::server {
+class razor::server(
+  $package_ensure = 'latest',
+) {
   $url  = 'http://links.puppetlabs.com/razor-server-latest.zip'
   $dest = '/opt/razor'
 
   package { "razor-server":
-    ensure   => latest,
+    ensure   => $package_ensure,
     require  => [Package[curl], Package[unzip]],
     notify   => Exec["deploy razor to torquebox"]
   }
